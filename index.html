@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Reported @ Nixu</title>
+		<link rel="stylesheet" type="text/css" href="./index.css">
+		<script type="text/javascript">
+			// 595x842 (A4 apparently)
+			let customer = 'Hvornum AB';
+			let dates = '2019-11-21 - 2019-11-22';
+			let final = true;
+
+			function build_first_page() {
+				let page = document.createElement('div');
+				let container = document.createElement('div');
+				let doc = document.createElement('h1');
+				let company = document.createElement('b');
+				let date = document.createElement('span');
+
+				doc.innerHTML = 'Nixu Pentest Report';
+				company.innerHTML = customer;
+				date.innerHTML = dates;
+
+				page.classList = 'first-page';
+				container.classList = 'container';
+				container.appendChild(doc);
+				container.appendChild(company);
+				container.appendChild(date);
+				page.appendChild(container);
+				return page
+			}
+
+			function PrintRender(elem) {
+				let reader = document.querySelector('#reader').innerHTML;
+				var originalContents = document.body.innerHTML;
+
+				let content = `
+				<html xmlns="http://www.w3.org/1999/xhtml" lang='en-US'>
+					<head>
+						<link rel="stylesheet" type="text/css" href="./index.css">
+					</head>
+					<body>
+						<div class="render" id="reader">
+							${reader}
+						</div>
+					</body>
+				</html>
+				`
+				document.body.innerHTML = content;
+				window.print();
+				
+				document.body.innerHTML = originalContents;
+			}
+
+			function format_content(str) {
+				return str;
+			}
+
+			function parse(obj) {
+				let lines = document.querySelector('#markdown').innerHTML.split('\n');
+				let sections = {};
+
+				let bullet_counters = {
+					"1" : 0,
+					"2" : 0,
+					"3" : 0
+				}
+
+				let section = null;
+				let builder = null;
+				let paragraph = null;
+				for(var i = 0;i < lines.length;i++){
+				    if(lines[i].substr(0, 1) == '#') {
+				    	if(paragraph) {
+				    		let span = document.createElement('span');
+				    		span.innerHTML = format_content(paragraph);
+				    		builder.appendChild(span);
+				    		paragraph = null;
+				    	}
+
+				    	let level = (lines[i].match(/#/g) || []).length;
+				    	section = lines[i].substr(level).trim();
+				    	if(!builder)
+				    		builder = document.createElement('div');
+
+				    	let h = document.createElement(`h${level}`)
+				    	h.innerHTML = section
+				    	builder.appendChild(h);
+				    } else {
+				    	if(!paragraph) {
+				    		paragraph = lines[i] + '<br>';
+				    	} else {
+				    		paragraph += lines[i] + '<br>';
+				    	}
+				    }
+				}
+
+				document.querySelector('#reader').innerHTML = '';
+				document.querySelector('#reader').appendChild(build_first_page());
+				document.querySelector('#reader').appendChild(builder);
+			}
+
+			window.onload = function() {
+				parse(document.querySelector('#markdown'))
+			}
+		</script>
+	</head>
+	<body>
+		<div class="editor">
+			<textarea class="input" id="markdown"># Executive Summary
+Hvornum AB was lacking in certain departments.
+And he didn't make up for it in afternoon fika.
+
+# Table Of Contents
+:toc{1,2}
+
+# Findings overview
+:prio{2}
+
+# Finding Details
+
+## Penetration not possible
+
+### Description
+Hvornum AB has a very strong anti-penetration aura. This is a clear vulnerability.
+
+### Proposed Solution
+Better fashion sense
+
+## Weak passwords
+
+### Description
+Clear weak passwords.
+
+![img](https://miro.medium.com/max/610/1*xwScPTcIGgjWfZIcEeR2oA.png)
+</textarea>
+		</div>
+		<div class="render" id="reader" onClick="PrintRender();">
+		</div>
+	</body>
+</html>
