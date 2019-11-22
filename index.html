@@ -9,9 +9,21 @@
 			let dates = '2019-11-21 - 2019-11-22';
 			let final = true;
 
+			let numbering = {
+				'1' : true,
+				'2' : true,
+				'3' : false
+			}
+
+			let bullet_counters = {
+				"1" : 0,
+				"2" : 0,
+				"3" : 0
+			}
+
 			function build_first_page() {
 				let page = document.createElement('div');
-				let container = document.createElement('div');
+				let paragraph = document.createElement('div');
 				let doc = document.createElement('h1');
 				let company = document.createElement('b');
 				let date = document.createElement('span');
@@ -21,11 +33,11 @@
 				date.innerHTML = dates;
 
 				page.classList = 'first-page';
-				container.classList = 'container';
-				container.appendChild(doc);
-				container.appendChild(company);
-				container.appendChild(date);
-				page.appendChild(container);
+				paragraph.classList = 'paragraph';
+				paragraph.appendChild(doc);
+				paragraph.appendChild(company);
+				paragraph.appendChild(date);
+				page.appendChild(paragraph);
 				return page
 			}
 
@@ -55,53 +67,116 @@
 				return str;
 			}
 
-			function parse(obj) {
-				let lines = document.querySelector('#markdown').innerHTML.split('\n');
-				let sections = {};
+			function get_inherited_levels(level) {
+				let lvl_str = '';
+				for(let i=level; i>0; i--) {
+					lvl_str = `${bullet_counters[i]}.` + lvl_str;
+				}
+				return lvl_str
+			}
 
-				let bullet_counters = {
+			function parse(markdown_raw) {
+				// Clear the reader (right hand side)
+				document.querySelector('#reader').innerHTML = '';
+				markdown = markdown_raw.split('\n'); // Converts markdown to line-by-line
+
+				// Keeps track of which numbering we're on (per level)
+				// Activate / Disable numbering is done above (global variables)
+				bullet_counters = {
 					"1" : 0,
 					"2" : 0,
 					"3" : 0
 				}
 
+				// Add the first page to it.
+				document.querySelector('#reader').appendChild(build_first_page());
+
+				// Ok, so lets begin parsing.
+				// We parse line-by-line!
 				let section = null;
-				let builder = null;
 				let paragraph = null;
-				for(var i = 0;i < lines.length;i++){
-				    if(lines[i].substr(0, 1) == '#') {
-				    	if(paragraph) {
-				    		let span = document.createElement('span');
-				    		span.innerHTML = format_content(paragraph);
-				    		builder.appendChild(span);
-				    		paragraph = null;
-				    	}
+				let paragraph_text = null;
+				for(var i = 0;i < markdown.length;i++){
+					// If we find a paragraph, start a new paragraph
+					if(markdown[i].substr(0, 1) == '#') {
+						// And if a paragraph was already loaded, add that
+						// to the reader
+						if(paragraph_text) {
+							let span = document.createElement('span');
+							span.innerHTML = format_content(paragraph_text);
+							paragraph.appendChild(span);
+							document.querySelector('#reader').appendChild(paragraph);
+							paragraph = null;
+							paragraph_text = null;
+						}
 
-				    	let level = (lines[i].match(/#/g) || []).length;
-				    	section = lines[i].substr(level).trim();
-				    	if(!builder)
-				    		builder = document.createElement('div');
+						// Grab the level-number by counting the number of #
+						// Once we know how many we've got, remove them with substr()
+						// so we're left with the section (title)
+						let level = (markdown[i].match(/#/g) || []).length;
+						section = markdown[i].substr(level).trim();
+						// Create a paragraph placeholder to contain the header and body of
+						// the paragraph itself.
+						if(!paragraph) {
+							paragraph = document.createElement('div');
+							paragraph.classList = 'paragraph indent-'+level
+						}
 
-				    	let h = document.createElement(`h${level}`)
-				    	h.innerHTML = section
-				    	builder.appendChild(h);
-				    } else {
-				    	if(!paragraph) {
-				    		paragraph = lines[i] + '<br>';
-				    	} else {
-				    		paragraph += lines[i] + '<br>';
-				    	}
-				    }
+						// Add the header to the paragraph,
+						// Body will be added later once we know how much text should
+						// be added (remember, we're line by line still..)
+						let h = document.createElement(`h${level}`)
+						if(numbering[level] !== false) {
+							bullet_counters[level] += 1
+							let level_num_str = get_inherited_levels(level)
+							h.innerHTML = `${level_num_str} ${section}`;
+						} else {
+							h.innerHTML = section;
+						}
+						paragraph.appendChild(h);
+					} else {
+						if(!paragraph_text) {
+							paragraph_text = markdown[i] + '<br>';
+						} else {
+							paragraph_text += markdown[i] + '<br>';
+						}
+					}
 				}
 
-				document.querySelector('#reader').innerHTML = '';
-				document.querySelector('#reader').appendChild(build_first_page());
-				document.querySelector('#reader').appendChild(builder);
+				// Finally, if we're left with a paragraph_text at the 
+				// end of parsing, add it to the reader..
+				// We do this since there won't be any more # starting new paragraphs
+				// which is usually when we add the paragraph text.
+				if(paragraph_text) {
+					let span = document.createElement('span');
+					span.innerHTML = format_content(paragraph_text);
+					paragraph.appendChild(span);
+					document.querySelector('#reader').appendChild(paragraph);
+					paragraph = null;
+					paragraph_text = null;
+				}
 			}
 
 			window.onload = function() {
-				parse(document.querySelector('#markdown'))
+				// Initial parsing, adding event listeners to parse() on change/input.
+				let md = document.querySelector('#markdown');
+				parse(md.value)
+
+				md.addEventListener('input', function() {
+					parse(this.value);
+				})
+				md.addEventListener('change', function() {
+					parse(this.value);
+				})
 			}
+
+			document.addEventListener("keydown", function(e) {
+				// Prevent Ctr-S (or CMD+S on Mac) to open the "Save as" window,
+				// Since this is not a document, people might spam Ctrl-S to save.. which is annoying.
+				if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)  && e.keyCode == 83) {
+					e.preventDefault();
+				}
+			}, false);
 		</script>
 	</head>
 	<body>
