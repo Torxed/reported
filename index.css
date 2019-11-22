@@ -1,5 +1,6 @@
 :root {
 	--nixuBlue: #0089CF;
+	--page-height: 1056px;
 }
 
 html {
@@ -19,14 +20,10 @@ body {
 	display: flex;
 	flex-direction: column;
 	width: 100%;
-	height: 842px;
+	height: var(--page-height);
 	align-content: center;
 	justify-content: center;
-}
-
-.first-page > .container {
-	display: flex;
-	flex-direction: column;
+	border-bottom: 1px dotted #C2C2C2;
 }
 
 .editor {
@@ -56,14 +53,29 @@ body {
 	background-position: -10px -50px;
 }
 
+.paragraph {
+	display: flex;
+	flex-direction: column;
+	margin-left: 2em;
+	margin-right: 2em;
+}
+
+.indent-1 {
+	margin-left: 2em;
+}
+.indent-2 {
+	margin-left: 3em;
+}
+.indent-3 {
+	margin-left: 4em;
+}
+
 h1,h2,h3 {
 	color: var(--nixuBlue);
-	padding-left: 1em;
 	margin: 0px;
 }
 
 span {
-	padding-left: 2em;
 	margin: 0px;
 	-webkit-box-decoration-break: clone;
 	box-decoration-break: clone;
