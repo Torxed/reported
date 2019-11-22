@@ -147,7 +147,7 @@
 				// end of parsing, add it to the reader..
 				// We do this since there won't be any more # starting new paragraphs
 				// which is usually when we add the paragraph text.
-				if(paragraph_text) {
+				if(paragraph && paragraph_text) {
 					let span = document.createElement('span');
 					span.innerHTML = format_content(paragraph_text);
 					paragraph.appendChild(span);
