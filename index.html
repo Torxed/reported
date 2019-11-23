@@ -137,10 +137,6 @@
 						paragraph.appendChild(h);
 						document.querySelector('#reader').appendChild(paragraph);
 					} else {
-						if(!paragraph_text) {
-							paragraph_text = '';
-						}
-
 						if(!span) {
 							span = document.createElement('span');
 							paragraph.appendChild(span);
@@ -155,12 +151,16 @@
 							let img = document.createElement('img');
 							img.src = url;
 							paragraph.appendChild(img);
+
+							// Restart the text-section, since we're breaking in a picture.
+							span = document.createElement('span');
+							paragraph.appendChild(span);
+
 						// If we didn't find the above special cases,
 						// We'll assume it's just text that should be added.
 						} else {
-							paragraph_text += markdown[i] + '<br>';
+							span.innerHTML = span.innerHTML + format_content(markdown[i]) + '<br>';
 						}
-						span.innerHTML = format_content(paragraph_text);
 					}
 				}
 			}
