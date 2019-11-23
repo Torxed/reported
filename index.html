@@ -177,12 +177,16 @@
 						let img_str = markdown[i].match(/!\[.*\]\(.*\)/g);
 						let toc_str = markdown[i].match(/:toc{[0-9,]+}/g);
 						if(img_str) {
+							let descr = img_str[0].match(/\[.*\]/g)[0];
 							let url = img_str[0].match(/\(.*\)/g)[0];
+							let img_descr = document.createElement('span');
+							img_descr.innerHTML = '<i>'+descr.substr(1, descr.length-2)+'</i>';
 							url = url.substr(1, url.length-2);
 							
 							let img = document.createElement('img');
 							img.src = url;
 							paragraph.appendChild(img);
+							paragraph.appendChild(img_descr)
 
 							// Restart the text-section, since we're breaking in a picture.
 							span = document.createElement('span');
@@ -258,7 +262,7 @@ Use 2FA everywhere.
 ### Description
 A lot of passwords were located in plain text.
 
-![img](https://miro.medium.com/max/610/1*xwScPTcIGgjWfZIcEeR2oA.png)
+![Image description here](https://miro.medium.com/max/610/1*xwScPTcIGgjWfZIcEeR2oA.png)
 </textarea>
 		</div>
 		<div class="render" id="reader" onClick="PrintRender();">
