@@ -22,6 +22,9 @@
 				"3" : 0
 			}
 
+			let table_of_contents = {
+			}
+
 			function build_first_page() {
 				let page = document.createElement('div');
 				let paragraph = document.createElement('div');
@@ -74,6 +77,25 @@
 					lvl_str = `${bullet_counters[i]}.` + lvl_str;
 				}
 				return lvl_str
+			}
+
+			function add_header_to_toc(level, header) {
+				let levels = level.split('.');
+				levels = levels.slice(0, levels.length-1);
+				let toc = table_of_contents;
+				let counter = 0;
+				levels.forEach((level) => {
+					if(typeof toc[level] === 'undefined') {
+						toc[level] = {}
+					}
+					counter++;
+					if(levels.length == counter) {
+						toc[level]['header'] = header
+					} else {
+						toc = toc[level];
+					}
+				})
+				toc = header;
 			}
 
 			function parse(markdown_raw) {
@@ -131,6 +153,7 @@
 							bullet_counters[level] += 1
 							let level_num_str = get_inherited_levels(level)
 							h.innerHTML = `${level_num_str} ${header}`;
+							add_header_to_toc(level_num_str, header);
 						} else {
 							h.innerHTML = header;
 						}
