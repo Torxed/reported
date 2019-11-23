@@ -136,7 +136,20 @@
 						paragraph.appendChild(h);
 					} else {
 						if(!paragraph_text) {
-							paragraph_text = markdown[i] + '<br>';
+							paragraph_text = '';
+						}
+
+						// Look for a image on the current row
+						let img_str = markdown[i].match(/!\[.*\]\(.*\)/g);
+						if(img_str) {
+							let url = img_str[0].match(/\(.*\)/g)[0];
+							url = url.substr(1, url.length-2);
+							
+							let img = document.createElement('img');
+							img.src = url;
+							paragraph.appendChild(img);
+						// If we didn't find the above special cases,
+						// We'll assume it's just text that should be added.
 						} else {
 							paragraph_text += markdown[i] + '<br>';
 						}
