@@ -39,6 +39,10 @@ body {
 		outline: none;
 		background-color: transparent;
 		resize: none;
+		width: 50%;
+		overflow: auto;
+		height: 100%;
+		position: fixed;
 	}
 
 .render {
