@@ -93,34 +93,34 @@
 
 				// Ok, so lets begin parsing.
 				// We parse line-by-line!
-				let section = null;
+				let header = null;
 				let paragraph = null;
 				let paragraph_text = null;
+				let span = null;
 				for(var i = 0;i < markdown.length;i++){
+					// Create a paragraph placeholder to contain the header and body of
+					// the paragraph itself.
+					if(!paragraph && markdown[i].substr(0, 1) != '#') {
+						paragraph = document.createElement('div');
+						paragraph.classList = 'paragraph'
+						document.querySelector('#reader').appendChild(paragraph);
+					}
+
 					// If we find a paragraph, start a new paragraph
 					if(markdown[i].substr(0, 1) == '#') {
-						// And if a paragraph was already loaded, add that
-						// to the reader
-						if(paragraph_text) {
-							let span = document.createElement('span');
-							span.innerHTML = format_content(paragraph_text);
-							paragraph.appendChild(span);
-							document.querySelector('#reader').appendChild(paragraph);
-							paragraph = null;
-							paragraph_text = null;
-						}
+						let level = (markdown[i].match(/#/g) || []).length;
+
+						// New paragraph, clear everything up before we set it up.
+						paragraph = document.createElement('div');
+						paragraph.classList = 'paragraph indent-'+level
+						document.querySelector('#reader').appendChild(paragraph);
+						paragraph_text = null;
+						span = null;
 
 						// Grab the level-number by counting the number of #
 						// Once we know how many we've got, remove them with substr()
 						// so we're left with the section (title)
-						let level = (markdown[i].match(/#/g) || []).length;
-						section = markdown[i].substr(level).trim();
-						// Create a paragraph placeholder to contain the header and body of
-						// the paragraph itself.
-						if(!paragraph) {
-							paragraph = document.createElement('div');
-							paragraph.classList = 'paragraph indent-'+level
-						}
+						header = markdown[i].substr(level).trim();
 
 						// Add the header to the paragraph,
 						// Body will be added later once we know how much text should
@@ -129,14 +129,20 @@
 						if(numbering[level] !== false) {
 							bullet_counters[level] += 1
 							let level_num_str = get_inherited_levels(level)
-							h.innerHTML = `${level_num_str} ${section}`;
+							h.innerHTML = `${level_num_str} ${header}`;
 						} else {
-							h.innerHTML = section;
+							h.innerHTML = header;
 						}
 						paragraph.appendChild(h);
+						document.querySelector('#reader').appendChild(paragraph);
 					} else {
 						if(!paragraph_text) {
 							paragraph_text = '';
+						}
+
+						if(!span) {
+							span = document.createElement('span');
+							paragraph.appendChild(span);
 						}
 
 						// Look for a image on the current row
@@ -153,20 +159,8 @@
 						} else {
 							paragraph_text += markdown[i] + '<br>';
 						}
+						span.innerHTML = format_content(paragraph_text);
 					}
-				}
-
-				// Finally, if we're left with a paragraph_text at the 
-				// end of parsing, add it to the reader..
-				// We do this since there won't be any more # starting new paragraphs
-				// which is usually when we add the paragraph text.
-				if(paragraph && paragraph_text) {
-					let span = document.createElement('span');
-					span.innerHTML = format_content(paragraph_text);
-					paragraph.appendChild(span);
-					document.querySelector('#reader').appendChild(paragraph);
-					paragraph = null;
-					paragraph_text = null;
 				}
 			}
 
