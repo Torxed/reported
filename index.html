@@ -81,8 +81,8 @@
 
 			function add_header_to_toc(level, header) {
 				let levels = level.split('.');
-				levels = levels.slice(0, levels.length-1);
-				let toc = table_of_contents;
+				levels = levels.slice(0, levels.length-1); // Remve trailing empty "level"
+				let toc = table_of_contents; // Get the memory reference for table_of_contents
 				let counter = 0;
 				levels.forEach((level) => {
 					if(typeof toc[level] === 'undefined') {
@@ -90,8 +90,10 @@
 					}
 					counter++;
 					if(levels.length == counter) {
+						// If we're on the last level, drop the header here :)
 						toc[level]['header'] = header
 					} else {
+						// Jump "one level down" so we can add lower levels into this level.
 						toc = toc[level];
 					}
 				})
@@ -130,7 +132,7 @@
 				let span = null;
 				for(var i = 0;i < markdown.length;i++){
 					// Create a paragraph placeholder to contain the header and body of
-					// the paragraph itself.
+					// the paragraph itself. This will be re-created on each new header as well.
 					if(!paragraph && markdown[i].substr(0, 1) != '#') {
 						paragraph = document.createElement('div');
 						paragraph.classList = 'paragraph'
