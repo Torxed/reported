@@ -1,0 +1,13 @@
+:root {
+	--nixuBlue: #0089CF;
+}
+.render {
+	background-image: url('./media/graphics.png');
+	background-size: 24em;
+	background-repeat: no-repeat;
+	background-position: -10px -50px;
+}
+
+h1,h2,h3 {
+	color: var(--nixuBlue);
+}

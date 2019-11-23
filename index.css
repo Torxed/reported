@@ -1,6 +1,6 @@
 :root {
-	--nixuBlue: #0089CF;
 	--page-height: 1056px;
+	--page-height-debug: 600px;
 }
 
 html {
@@ -47,10 +47,6 @@ body {
 	*/
 	flex: 50%;
 	background-color: #FFFFFF;
-	background-image: url('./media/graphics.png');
-	background-size: 24em;
-	background-repeat: no-repeat;
-	background-position: -10px -50px;
 }
 
 .paragraph {
@@ -71,7 +67,6 @@ body {
 }
 
 h1,h2,h3 {
-	color: var(--nixuBlue);
 	margin: 0px;
 }
 
