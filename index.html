@@ -28,17 +28,17 @@
 			function build_first_page() {
 				let page = document.createElement('div');
 				let paragraph = document.createElement('div');
-				let doc = document.createElement('h1');
+				let document_title = document.createElement('h1');
 				let company = document.createElement('b');
 				let date = document.createElement('span');
 
-				doc.innerHTML = 'Nixu Pentest Report';
+				document_title.innerHTML = 'Nixu Pentest Report';
 				company.innerHTML = customer;
 				date.innerHTML = dates;
 
 				page.classList = 'first-page';
 				paragraph.classList = 'paragraph';
-				paragraph.appendChild(doc);
+				paragraph.appendChild(document_title);
 				paragraph.appendChild(company);
 				paragraph.appendChild(date);
 				page.appendChild(paragraph);
@@ -96,6 +96,14 @@
 					}
 				})
 				toc = header;
+			}
+
+			function refresh_table_of_contents() {
+				let toc = document.querySelector('#table_of_contents');
+				let pre = document.createElement('pre');
+				pre.innerHTML = JSON.stringify(table_of_contents, null, 4);
+				toc.innerHTML = '';
+				toc.appendChild(pre);
 			}
 
 			function parse(markdown_raw) {
@@ -167,6 +175,7 @@
 
 						// Look for a image on the current row
 						let img_str = markdown[i].match(/!\[.*\]\(.*\)/g);
+						let toc_str = markdown[i].match(/:toc{[0-9,]+}/g);
 						if(img_str) {
 							let url = img_str[0].match(/\(.*\)/g)[0];
 							url = url.substr(1, url.length-2);
@@ -179,6 +188,15 @@
 							span = document.createElement('span');
 							paragraph.appendChild(span);
 
+						// We got a table of contents request.
+						// Render it!
+						} else if (toc_str) {
+							let toc_html_obj = document.createElement('div');
+							toc_html_obj.id = 'table_of_contents';
+
+							paragraph.appendChild(toc_html_obj);
+							span = document.createElement('span');
+							paragraph.appendChild(span);
 						// If we didn't find the above special cases,
 						// We'll assume it's just text that should be added.
 						} else {
@@ -186,6 +204,9 @@
 						}
 					}
 				}
+
+				// Have to do it at the end, since we haven't finished parsing all the headers otherwise.
+				refresh_table_of_contents();
 			}
 
 			window.onload = function() {
