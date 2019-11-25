@@ -126,11 +126,21 @@
 			}
 
 			function check_for_markdown_syntax(markdown_row, header, paragraph, paragraph_text, span) {
+				// Look for table of contents on the current row
+				let toc_str = markdown_row.match(/:toc{[0-9,]+}/g);
 				// Look for a image on the current row
 				let img_str = markdown_row.match(/!\[.*\]\(.*\)/g);
-					if(img_str) {
-						markdown_image(img_str, paragraph)
-					}
+
+				if(img_str) {
+					markdown_image(img_str, paragraph)
+				} else if (toc_str) {
+					let toc_html_obj = document.createElement('div');
+					toc_html_obj.id = 'table_of_contents';
+
+					paragraph.appendChild(toc_html_obj);
+					span = document.createElement('span');
+					paragraph.appendChild(span);
+				}
 			}
 
 			function parse(markdown_raw) {
@@ -202,19 +212,9 @@
 
 						check_for_markdown_syntax(markdown[i], header, paragraph, paragraph_text, span)
 
-						let toc_str = markdown[i].match(/:toc{[0-9,]+}/g);
-						if (toc_str) {
-							let toc_html_obj = document.createElement('div');
-							toc_html_obj.id = 'table_of_contents';
-
-							paragraph.appendChild(toc_html_obj);
-							span = document.createElement('span');
-							paragraph.appendChild(span);
 						// If we didn't find the above special cases,
 						// We'll assume it's just text that should be added.
-						} else {
-							span.innerHTML = span.innerHTML + format_content(markdown[i]) + '<br>';
-						}
+						span.innerHTML = span.innerHTML + format_content(markdown[i]) + '<br>';
 					}
 				}
 
