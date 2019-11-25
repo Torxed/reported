@@ -63,7 +63,7 @@
 				`
 				document.body.innerHTML = content;
 				window.print();
-				
+
 				document.body.innerHTML = originalContents;
 			}
 
@@ -106,6 +106,30 @@
 				pre.innerHTML = JSON.stringify(table_of_contents, null, 4);
 				toc.innerHTML = '';
 				toc.appendChild(pre);
+			}
+
+			function markdown_image(img_str, paragraph) {
+				let desc = img_str[0].match(/\[.*\]/g)[0];
+				let url = img_str[0].match(/\(.*\)/g)[0];
+				let img_desc = document.createElement('span');
+				img_desc.innerHTML = '<i>'+desc.substr(1, desc.length-2)+'</i>';
+				url = url.substr(1, url.length-2);
+
+				let img = document.createElement('img');
+				img.src = url;
+				paragraph.appendChild(img);
+				paragraph.appendChild(img_desc)
+
+				// Restart the text-section, since we're breaking in a picture.
+				span = document.createElement('span');
+				paragraph.appendChild(span);
+			}
+
+			function check_for_markdown_syntax(markdown_row, header, paragraph, paragraph_text, span) {
+				let img_str = markdown_row.match(/!\[.*\]\(.*\)/g);
+					if(img_str) {
+						markdown_image(img_str, paragraph)
+					}
 			}
 
 			function parse(markdown_raw) {
@@ -175,28 +199,11 @@
 							paragraph.appendChild(span);
 						}
 
+						check_for_markdown_syntax(markdown[i], header, paragraph, paragraph_text, span)
+
 						// Look for a image on the current row
-						let img_str = markdown[i].match(/!\[.*\]\(.*\)/g);
 						let toc_str = markdown[i].match(/:toc{[0-9,]+}/g);
-						if(img_str) {
-							let descr = img_str[0].match(/\[.*\]/g)[0];
-							let url = img_str[0].match(/\(.*\)/g)[0];
-							let img_descr = document.createElement('span');
-							img_descr.innerHTML = '<i>'+descr.substr(1, descr.length-2)+'</i>';
-							url = url.substr(1, url.length-2);
-							
-							let img = document.createElement('img');
-							img.src = url;
-							paragraph.appendChild(img);
-							paragraph.appendChild(img_descr)
-
-							// Restart the text-section, since we're breaking in a picture.
-							span = document.createElement('span');
-							paragraph.appendChild(span);
-
-						// We got a table of contents request.
-						// Render it!
-						} else if (toc_str) {
+						if (toc_str) {
 							let toc_html_obj = document.createElement('div');
 							toc_html_obj.id = 'table_of_contents';
 
