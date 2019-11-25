@@ -126,6 +126,7 @@
 			}
 
 			function check_for_markdown_syntax(markdown_row, header, paragraph, paragraph_text, span) {
+				// Look for a image on the current row
 				let img_str = markdown_row.match(/!\[.*\]\(.*\)/g);
 					if(img_str) {
 						markdown_image(img_str, paragraph)
@@ -201,7 +202,6 @@
 
 						check_for_markdown_syntax(markdown[i], header, paragraph, paragraph_text, span)
 
-						// Look for a image on the current row
 						let toc_str = markdown[i].match(/:toc{[0-9,]+}/g);
 						if (toc_str) {
 							let toc_html_obj = document.createElement('div');
