@@ -132,7 +132,14 @@
 			function check_for_markdown_syntax(markdown_row, header, paragraph, paragraph_text, span) {
 				let toc_regex = /:toc{[0-9,]+}/g
 				let img_regex = /!\[.*\]\(.*\)/g
-				let formating_regex = RegExp(/(\\?)(([\*\_~])(\3*?))(?!\3)(.+?)\2/, 'g')
+				// First group finds if the character is start of string, backslash or greater than. Greater than is needed since other characters may become html
+				// Second group is the complete markdown set
+				// Third group is the markdown character
+				// Fourth group is copies of the markdown character
+				// False fifth group is to make sure that the markdown character is not part of the string, to make sure that all markdown characters are used
+				// Fifth group is the markdowned text
+				// The last copy of group 2 is to make sure that the exact markdown set is copied to the end
+				let formating_regex = RegExp(/(^|>|\s|\\)(([\*\_~])(\3*?))(?!\3)(.+?)\2/, 'g')
 				let formating_replacers = {'*': 'em', '_': 'em', '**': 'strong', '__': 'strong', '~~': 'del'}
 
 				// Combined emphasis with **asterisks and _underscores_**.
@@ -169,7 +176,7 @@
 						// Replace the markdown with the correct HTML tag
 						let target = formating_replacers[match[2]]
 						if (target !== undefined) {
-							let result = '<' + target + '>' + match[5] + '</' + target + '>'
+							let result = match[1] + '<' + target + '>' + match[5] + '</' + target + '>'
 							markdown_row = markdown_row.replace(match[0], result)
 						}
 						formating_regex.lastIndex = match.index + 1
