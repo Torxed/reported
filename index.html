@@ -167,7 +167,7 @@
 			function strikethrough(strikethrough_str, paragraph) {
 				//TODO: handle case with multiple words in *_str that are meant to be special, ie ~~A~~ ~~password~~
 				let strike_p = document.createElement('p');
-				strike_p.innerHTML = '<b>' + strikethrough_str[0].substr(2, strikethrough_str[0].length-2) + '<b>';
+				strike_p.innerHTML = '<del>' + strikethrough_str[0].substr(2, strikethrough_str[0].length-2) + '<del>';
 				paragraph.appendChild(strike_p);
 				// Restart the text-section, since we're breaking in the strikethrough
 				span = document.createElement('span');
