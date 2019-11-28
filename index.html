@@ -129,57 +129,14 @@
 				paragraph.appendChild(span);
 			}
 
-			function italics(italics_str) {
-				let italics_obj = document.createElement('i');
-				italics_obj.innerHTML = italics_str[0].substr(1, italics_str[0].length-2);
-				return italics_obj.outerHTML
-			}
-
-			function bold(bold_str) {
-				console.log('Got bold str:', bold_str)
-				let bold_obj = document.createElement('b');
-				bold_obj.innerHTML = bold_str[0].substr(2, bold_str[0].length-4);
-
-				console.log('Converted to:', bold_obj.outerHTML)
-				/*
-				paragraph.appendChild(bold);
-				// Restart the text-section, since we're breaking in the bold
-				span = document.createElement('span');
-				paragraph.appendChild(span);
-				*/
-				return bold_obj.outerHTML
-			}
-
-			function combined_emphasis_with_bold(comb_emphasis_with_bold_str, paragraph) {
-				//TODO: handle case with multiple words in *_str that are meant to be special, ie **A _password_** is _not **good**_
-				let comb_p = document.createElement('p');
-				comb_p.innerHTML = '<b>' + comb_emphasis_with_bold_str[0].substr(2, comb_emphasis_with_bold_str[0].length-2) + '<b>';
-				paragraph.appendChild(bold_p);
-				// Restart the text-section, since we're breaking in the combo
-				span = document.createElement('span');
-				paragraph.appendChild(span);
-			}
-
-			function strikethrough(strikethrough_str, paragraph) {
-				let strike_obj = document.createElement('del');
-				strike_obj.innerHTML = strikethrough_str[0].substr(2, strikethrough_str[0].length-4);
-				return strike_obj.outerHTML
-			}
-
 			function check_for_markdown_syntax(markdown_row, header, paragraph, paragraph_text, span) {
 				let toc_regex = /:toc{[0-9,]+}/g
 				let img_regex = /!\[.*\]\(.*\)/g
-				let ital_regex = /(\*|\_)(.)+(\*|\_)/g
-				let bold_regex = /[\*]{2}.*?[\*]{2}/g
-				let stri_regex = /\~\~(.)+\~\~/g
-				let formating_regex = RegExp(/(([\*\_~])(\2*?))(?!\2)(.+?)\1/, 'g')
+				let formating_regex = RegExp(/(\\?)(([\*\_~])(\3*?))(?!\3)(.+?)\2/, 'g')
 				let formating_replacers = {'*': 'em', '_': 'em', '**': 'strong', '__': 'strong', '~~': 'del'}
-
-
 
 				// Combined emphasis with **asterisks and _underscores_**.
 				//let comb_emphasis_with_bold_str = markdown_row.match(/((\*\*)(.)+(\_\*\*)|((\_)(.)+(\*\*\_)))/g);
-
 
 				// image on the current row
 				let img_str = markdown_row.match(img_regex);
@@ -199,44 +156,31 @@
 					paragraph.appendChild(span);
 				}
 				{
-					// Fulhack av Ofenhed...
+					// Uglihack by Ofenhed
 					var match
 					formating_regex.lastIndex = 0
 					while ((match = formating_regex.exec(markdown_row)) !== null) {
-						let target = formating_replacers[match[1]]
+						// If the first character is a backslash, remove it without replacing the regex
+						if (match[1] == '\\') {
+							markdown_row = markdown_row.slice(0,match.index) + markdown_row.slice(match.index + 1)
+							formating_regex.lastIndex = match.index + 1
+							continue
+						}
+						// Replace the markdown with the correct HTML tag
+						let target = formating_replacers[match[2]]
 						if (target !== undefined) {
-							let result = '<' + target + '>' + match[4] + '</' + target + '>'
+							let result = '<' + target + '>' + match[5] + '</' + target + '>'
 							markdown_row = markdown_row.replace(match[0], result)
 						}
 						formating_regex.lastIndex = match.index + 1
 					}
 				}
+
 				// table of contents on the current row
 				let toc_str = markdown_row.match(toc_regex);
 				if (toc_str) {
 					toc(toc_str, paragraph)
 				}
-				if (false) {
-				// Strong emphasis, aka bold, with **asterisks**.
-				// https://regexr.com/4pod1
-				let bold_str = markdown_row.match(bold_regex)
-				if (bold_str) {
-					let formatted = bold(bold_str);
-					markdown_row = markdown_row.replace(bold_str, formatted);
-				}
-				// Emphasis, aka italics, with *asterisks* or _underscores_.
-				let italics_str = markdown_row.match(ital_regex);
-				if (italics_str) {
-					let formatted = italics(italics_str);
-					markdown_row = markdown_row.replace(italics_str, formatted);
-				}
-				// Strikethrough uses two tildes. ~~Scratch this.~~
-				let strikethrough_str = markdown_row.match(stri_regex);
-				if (strikethrough_str) {
-					let formatted = strikethrough(strikethrough_str)
-					markdown_row = markdown_row.replace(strikethrough_str, formatted);
-				}
-			}
 
 				//if(markdown_row.length)
 				span.innerHTML = span.innerHTML + format_content(markdown_row) + '<br>';
