@@ -108,7 +108,7 @@
 				toc.appendChild(pre);
 			}
 
-			function markdown_image(img_str, paragraph) {
+			function markdown_image(img_str) {
 				let desc = img_str[0].match(/\[.*\]/g)[0];
 				let url = img_str[0].match(/\(.*\)/g)[0];
 				let img_desc = document.createElement('span');
@@ -117,12 +117,7 @@
 
 				let img = document.createElement('img');
 				img.src = url;
-				paragraph.appendChild(img);
-				paragraph.appendChild(img_desc)
-
-				// Restart the text-section, since we're breaking in a picture.
-				span = document.createElement('span');
-				paragraph.appendChild(span);
+				return {'img' : img, 'description' : img_desc};
 			}
 
 			function toc(toc_str, paragraph) {
@@ -134,24 +129,25 @@
 				paragraph.appendChild(span);
 			}
 
-			function italics(italics_str, paragraph) {
-				//TODO: handle case with multiple words in italics_str that are meant to be italics, ie _A_ *password*
-				let italics_p = document.createElement('p');
-				italics_p.innerHTML = '<em>' + italics_str[0].substr(1, italics_str[0].length-1) + '<em>';
-				paragraph.appendChild(italics_p);
-				// Restart the text-section, since we're breaking in the italics
-				span = document.createElement('span');
-				paragraph.appendChild(span);
+			function italics(italics_str) {
+				let italics_obj = document.createElement('i');
+				italics_obj.innerHTML = italics_str[0].substr(1, italics_str[0].length-2);
+				return italics_obj.outerHTML
 			}
 
-			function bold(bold_str, paragraph) {
-				//TODO: handle case with multiple words in bold_str that are meant to be bold, ie **A** __password__
-				let bold_p = document.createElement('p');
-				bold_p.innerHTML = '<b>' + bold_str[0].substr(2, bold_str[0].length-2) + '<b>';
-				paragraph.appendChild(bold_p);
+			function bold(bold_str) {
+				console.log('Got bold str:', bold_str)
+				let bold_obj = document.createElement('b');
+				bold_obj.innerHTML = bold_str[0].substr(2, bold_str[0].length-4);
+				
+				console.log('Converted to:', bold_obj.outerHTML)
+				/*
+				paragraph.appendChild(bold);
 				// Restart the text-section, since we're breaking in the bold
 				span = document.createElement('span');
 				paragraph.appendChild(span);
+				*/
+				return bold_obj.outerHTML
 			}
 
 			function combined_emphasis_with_bold(comb_emphasis_with_bold_str, paragraph) {
@@ -165,46 +161,68 @@
 			}
 
 			function strikethrough(strikethrough_str, paragraph) {
-				//TODO: handle case with multiple words in *_str that are meant to be special, ie ~~A~~ ~~password~~
-				let strike_p = document.createElement('p');
-				strike_p.innerHTML = '<del>' + strikethrough_str[0].substr(2, strikethrough_str[0].length-2) + '<del>';
-				paragraph.appendChild(strike_p);
-				// Restart the text-section, since we're breaking in the strikethrough
-				span = document.createElement('span');
-				paragraph.appendChild(span);
+				let strike_obj = document.createElement('del');
+				strike_obj.innerHTML = strikethrough_str[0].substr(2, strikethrough_str[0].length-4);
+				return strike_obj.outerHTML
 			}
 
 			function check_for_markdown_syntax(markdown_row, header, paragraph, paragraph_text, span) {
-				// table of contents on the current row
-				let toc_str = markdown_row.match(/:toc{[0-9,]+}/g);
-				// image on the current row
-				let img_str = markdown_row.match(/!\[.*\]\(.*\)/g);
-				// Emphasis, aka italics, with *asterisks* or _underscores_.
-				let italics_str = markdown_row.match(/(\*|\_)(.)+(\*|\_)/g);
-				// Strong emphasis, aka bold, with **asterisks** or __underscores__.
-				let bold_str = markdown_row.match(/(\*\*|\_\_)(.)+(\*\*|\_\_)/g)
-				// Combined emphasis with **asterisks and _underscores_**.
-				let comb_emphasis_with_bold_str = markdown_row.match(/((\*\*)(.)+(\_\*\*)|((\_)(.)+(\*\*\_)))/g);
-				// Strikethrough uses two tildes. ~~Scratch this.~~
-				let strikethrough_str = markdown_row.match(/\~\~(.)+\~\~/g);
+				let toc_regex = /:toc{[0-9,]+}/g
+				let img_regex = /!\[.*\]\(.*\)/g
+				let ital_regex = /(\*|\_)(.)+(\*|\_)/g
+				let bold_regex = /[\*]{2}.*?[\*]{2}/g
+				let stri_regex = /\~\~(.)+\~\~/g
 
+				
+				// Combined emphasis with **asterisks and _underscores_**.
+				//let comb_emphasis_with_bold_str = markdown_row.match(/((\*\*)(.)+(\_\*\*)|((\_)(.)+(\*\*\_)))/g);
+				
+
+				// image on the current row
+				let img_str = markdown_row.match(img_regex);
 				if(img_str) {
-					markdown_image(img_str, paragraph)
-				} else if (toc_str) {
-					toc(toc_str, paragraph)
-				} else if (italics_str) {
-					italics(italics_str, paragraph)
-				} else if (bold_str) {
-					bold(bold_str, paragraph)
-				} else if (comb_emphasis_with_bold_str) {
-					combined_emphasis_with_bold(comb_emphasis_with_bold_str, paragraph)
-				} else if (strikethrough_str) {
-					strikethrough(strikethrough_str, paragraph)
-				}else {
-					// If we didn't find the above special cases,
-					// We'll assume it's just text that should be added.
-					span.innerHTML = span.innerHTML + format_content(markdown_row) + '<br>';
+					markdown_row = markdown_row.replace(img_str, ''); // Since we're handling it below in the same code block.
+
+					// images are a bit special,
+					// since they are not a inline-text kind of object,
+					// they should and will break the text paragraph and
+					// needs to be inserted between two paragraphs.
+					let img_data = markdown_image(img_str)
+					paragraph.appendChild(img_data.img);
+					paragraph.appendChild(img_data.description)
+
+					// Restart the text-section, since we're breaking in a picture.
+					span = document.createElement('span');
+					paragraph.appendChild(span);
 				}
+
+				// table of contents on the current row
+				let toc_str = markdown_row.match(toc_regex);
+				if (toc_str) {
+					toc(toc_str, paragraph)
+				}
+				// Strong emphasis, aka bold, with **asterisks**.
+				// https://regexr.com/4pod1
+				let bold_str = markdown_row.match(bold_regex)
+				if (bold_str) {
+					let formatted = bold(bold_str);
+					markdown_row = markdown_row.replace(bold_str, formatted);
+				}
+				// Emphasis, aka italics, with *asterisks* or _underscores_.
+				let italics_str = markdown_row.match(ital_regex);
+				if (italics_str) {
+					let formatted = italics(italics_str);
+					markdown_row = markdown_row.replace(italics_str, formatted);
+				}
+				// Strikethrough uses two tildes. ~~Scratch this.~~
+				let strikethrough_str = markdown_row.match(stri_regex);
+				if (strikethrough_str) {
+					let formatted = strikethrough(strikethrough_str)
+					markdown_row = markdown_row.replace(strikethrough_str, formatted);
+				}
+				
+				//if(markdown_row.length)
+				span.innerHTML = span.innerHTML + format_content(markdown_row) + '<br>';
 			}
 
 			function parse(markdown_raw) {
