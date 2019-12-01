@@ -120,6 +120,12 @@
 				return {'img' : img, 'description' : img_desc};
 			}
 
+			function markdown_codeblock(text) {
+				let block = document.createElement('pre');
+				block.innerHTML = text[0].substr(3, text[0].length-6);
+				return block
+			}
+
 			function toc(toc_str, paragraph) {
 				let toc_html_obj = document.createElement('div');
 				toc_html_obj.id = 'table_of_contents';
@@ -129,21 +135,54 @@
 				paragraph.appendChild(span);
 			}
 
+			function italics(italics_str) {
+				let italics_obj = document.createElement('i');
+				italics_obj.innerHTML = italics_str[0].substr(1, italics_str[0].length-2);
+				return italics_obj.outerHTML
+			}
+
+			function bold(bold_str) {
+				let bold_obj = document.createElement('b');
+				bold_obj.innerHTML = bold_str[0].substr(2, bold_str[0].length-4);
+				return bold_obj.outerHTML
+			}
+
+			function combined_emphasis_with_bold(comb_emphasis_with_bold_str, paragraph) {
+				//TODO: handle case with multiple words in *_str that are meant to be special, ie **A _password_** is _not **good**_
+				let comb_p = document.createElement('p');
+				comb_p.innerHTML = '<b>' + comb_emphasis_with_bold_str[0].substr(2, comb_emphasis_with_bold_str[0].length-2) + '<b>';
+				paragraph.appendChild(bold_p);
+				// Restart the text-section, since we're breaking in the combo
+				span = document.createElement('span');
+				paragraph.appendChild(span);
+			}
+
+			function strikethrough(strikethrough_str, paragraph) {
+				let strike_obj = document.createElement('del');
+				strike_obj.innerHTML = strikethrough_str[0].substr(2, strikethrough_str[0].length-4);
+				return strike_obj.outerHTML
+			}
+
+			function code(code_str, paragraph) {
+				let code_obj = document.createElement('code');
+				code_obj.innerHTML = code_str[0].substr(1, code_str[0].length-2)
+				return code_obj.outerHTML
+			}
+
 			function check_for_markdown_syntax(markdown_row, header, paragraph, paragraph_text, span) {
 				let toc_regex = /:toc{[0-9,]+}/g
 				let img_regex = /!\[.*\]\(.*\)/g
-				// First group finds if the character is start of string, backslash or greater than. Greater than is needed since other characters may become html
-				// Second group is the complete markdown set
-				// Third group is the markdown character
-				// Fourth group is copies of the markdown character
-				// False fifth group is to make sure that the markdown character is not part of the string, to make sure that all markdown characters are used
-				// Fifth group is the markdowned text
-				// The last copy of group 2 is to make sure that the exact markdown set is copied to the end
-				let formating_regex = RegExp(/(^|>|\s|\\)(([\*\_~])(\3*?))(?!\3)(.+?)\2/, 'g')
-				let formating_replacers = {'*': 'em', '_': 'em', '**': 'strong', '__': 'strong', '~~': 'del'}
+				let ital_regex = /(\*|\_)(.)+(\*|\_)/g
+				let bold_regex = /[\*]{2}.*?[\*]{2}/g
+				let stri_regex = /\~\~(.)+\~\~/g
+			//	let codeblock_regex = /[\`]{3}([\n\r].*)+[\`]{3}/g // `x3 (new-line*)-repeat until `x3
+				let codeblock_regex = /[\`]{3}.*[\`]{3}/g
+				let code_regex = /\`(.)+?\`/g
+
 
 				// Combined emphasis with **asterisks and _underscores_**.
 				//let comb_emphasis_with_bold_str = markdown_row.match(/((\*\*)(.)+(\_\*\*)|((\_)(.)+(\*\*\_)))/g);
+
 
 				// image on the current row
 				let img_str = markdown_row.match(img_regex);
@@ -162,35 +201,58 @@
 					span = document.createElement('span');
 					paragraph.appendChild(span);
 				}
-				{
-					// Uglihack by Ofenhed
-					var match
-					formating_regex.lastIndex = 0
-					while ((match = formating_regex.exec(markdown_row)) !== null) {
-						// If the first character is a backslash, remove it without replacing the regex
-						if (match[1] == '\\') {
-							markdown_row = markdown_row.slice(0,match.index) + markdown_row.slice(match.index + 1)
-							formating_regex.lastIndex = match.index + 1
-							continue
-						}
-						// Replace the markdown with the correct HTML tag
-						let target = formating_replacers[match[2]]
-						if (target !== undefined) {
-							let result = match[1] + '<' + target + '>' + match[5] + '</' + target + '>'
-							markdown_row = markdown_row.replace(match[0], result)
-						}
-						formating_regex.lastIndex = match.index + 1
-					}
-				}
 
 				// table of contents on the current row
 				let toc_str = markdown_row.match(toc_regex);
 				if (toc_str) {
 					toc(toc_str, paragraph)
 				}
+				// Strong emphasis, aka bold, with **asterisks**.
+				// https://regexr.com/4pod1
+				let bold_str = markdown_row.match(bold_regex)
+				if (bold_str) {
+					let formatted = bold(bold_str);
+					markdown_row = markdown_row.replace(bold_str, formatted);
+				}
+				// Emphasis, aka italics, with *asterisks* or _underscores_.
+				let italics_str = markdown_row.match(ital_regex);
+				if (italics_str) {
+					let formatted = italics(italics_str);
+					markdown_row = markdown_row.replace(italics_str, formatted);
+				}
+				// Strikethrough uses two tildes. ~~Scratch this.~~
+				let strikethrough_str = markdown_row.match(stri_regex);
+				if (strikethrough_str) {
+					let formatted = strikethrough(strikethrough_str)
+					markdown_row = markdown_row.replace(strikethrough_str, formatted);
+				}
+				// Code, uses backticks, `code block`
+				let code_str = markdown_row.match(code_regex);
+				if (code_str) {
+					let formatted = code(code_str);
+					markdown_row = markdown_row.replace(code_str, formatted);
+				}
 
 				//if(markdown_row.length)
 				span.innerHTML = span.innerHTML + format_content(markdown_row) + '<br>';
+
+				console.log(span.innerHTML)
+				let block_str = span.innerHTML.match(codeblock_regex);
+				console.log(block_str);
+				if(block_str) {
+					span.innerHTML = span.innerHTML.replace(block_str, ''); // Since we're handling it below in the same code block.
+
+					// images are a bit special,
+					// since they are not a inline-text kind of object,
+					// they should and will break the text paragraph and
+					// needs to be inserted between two paragraphs.
+					let code_data = markdown_codeblock(block_str);
+					paragraph.appendChild(code_data);
+
+					// Restart the text-section, since we're breaking in a picture.
+					span = document.createElement('span');
+					paragraph.appendChild(span);
+				}
 			}
 
 			function parse(markdown_raw) {
@@ -308,6 +370,17 @@ Default **_administrative_ accounts** were enabled.
 
 ### Description
 During the **pentest**, a lot of weak passwords were found.
+To view the passwords we found use below command.
+`cat /etc/shadow`
+
+It's also possible to write larger code blocks:
+
+```
+import antigravity
+
+antigravity.init()
+antigravity.activate(myself)
+```
 
 ### Proposed Solution
 Use 2FA ~~everywhere~~.
