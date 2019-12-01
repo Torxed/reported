@@ -177,7 +177,7 @@
 				let stri_regex = /\~\~(.)+\~\~/g
 			//	let codeblock_regex = /[\`]{3}([\n\r].*)+[\`]{3}/g // `x3 (new-line*)-repeat until `x3
 				let codeblock_regex = /[\`]{3}.*[\`]{3}/g
-				let code_regex = /\`(.)+?\`/g
+				let code_regex = /`[\s\S]*?`(?:(?![\`]{1}))/g // Trying to avoide triggering on ``` which, this sort of don't.
 
 
 				// Combined emphasis with **asterisks and _underscores_**.
@@ -228,17 +228,14 @@
 				}
 				// Code, uses backticks, `code block`
 				let code_str = markdown_row.match(code_regex);
-				if (code_str) {
+				if (code_str && code_str[0] !== "```") {
 					let formatted = code(code_str);
 					markdown_row = markdown_row.replace(code_str, formatted);
 				}
 
-				//if(markdown_row.length)
 				span.innerHTML = span.innerHTML + format_content(markdown_row) + '<br>';
 
-				console.log(span.innerHTML)
 				let block_str = span.innerHTML.match(codeblock_regex);
-				console.log(block_str);
 				if(block_str) {
 					span.innerHTML = span.innerHTML.replace(block_str, ''); // Since we're handling it below in the same code block.
 
@@ -253,6 +250,7 @@
 					span = document.createElement('span');
 					paragraph.appendChild(span);
 				}
+
 			}
 
 			function parse(markdown_raw) {
