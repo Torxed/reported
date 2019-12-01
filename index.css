@@ -17,7 +17,7 @@ body {
 	font-family: sans-serif;
 }
 
-code {
+code, pre {
 	background-color: #DDDDDD;
 	/* Correct the spacring around the default font:
 	*/
