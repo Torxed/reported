@@ -244,18 +244,8 @@
 
 				let block_str = span.innerHTML.match(codeblock_regex);
 				if(block_str) {
-					span.innerHTML = span.innerHTML.replace(block_str, ''); // Since we're handling it below in the same code block.
-
-					// images are a bit special,
-					// since they are not a inline-text kind of object,
-					// they should and will break the text paragraph and
-					// needs to be inserted between two paragraphs.
 					let code_data = markdown_codeblock(block_str);
-					paragraph.appendChild(code_data);
-
-					// Restart the text-section, since we're breaking in a picture.
-					span = document.createElement('span');
-					paragraph.appendChild(span);
+					span.innerHTML = span.innerHTML.replace(block_str, code_data.outerHTML); // Since we're handling it below in the same code block.
 				}
 
 			}
@@ -386,6 +376,7 @@ import antigravity
 antigravity.init()
 antigravity.activate(myself)
 ```
+And the document continues.
 
 ### Proposed Solution
 Use 2FA ~~everywhere~~.
