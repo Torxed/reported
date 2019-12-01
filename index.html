@@ -139,7 +139,7 @@
 				console.log('Got bold str:', bold_str)
 				let bold_obj = document.createElement('b');
 				bold_obj.innerHTML = bold_str[0].substr(2, bold_str[0].length-4);
-				
+
 				console.log('Converted to:', bold_obj.outerHTML)
 				/*
 				paragraph.appendChild(bold);
@@ -166,17 +166,24 @@
 				return strike_obj.outerHTML
 			}
 
+			function code(code_str, paragraph) {
+				let code_obj = document.createElement('code');
+				code_obj.innerHTML = code_str[0].substr(1, code_str[0].length-2)
+				return code_obj.outerHTML
+			}
+
 			function check_for_markdown_syntax(markdown_row, header, paragraph, paragraph_text, span) {
 				let toc_regex = /:toc{[0-9,]+}/g
 				let img_regex = /!\[.*\]\(.*\)/g
 				let ital_regex = /(\*|\_)(.)+(\*|\_)/g
 				let bold_regex = /[\*]{2}.*?[\*]{2}/g
 				let stri_regex = /\~\~(.)+\~\~/g
+				let code_regex = /\`(.)+\`/g
 
-				
+
 				// Combined emphasis with **asterisks and _underscores_**.
 				//let comb_emphasis_with_bold_str = markdown_row.match(/((\*\*)(.)+(\_\*\*)|((\_)(.)+(\*\*\_)))/g);
-				
+
 
 				// image on the current row
 				let img_str = markdown_row.match(img_regex);
@@ -220,7 +227,13 @@
 					let formatted = strikethrough(strikethrough_str)
 					markdown_row = markdown_row.replace(strikethrough_str, formatted);
 				}
-				
+				// Code, uses backticks, `code block`
+				let code_str = markdown_row.match(code_regex);
+				if (code_str) {
+					let formatted = code(code_str);
+					markdown_row = markdown_row.replace(code_str, formatted);
+				}
+
 				//if(markdown_row.length)
 				span.innerHTML = span.innerHTML + format_content(markdown_row) + '<br>';
 			}
@@ -340,6 +353,8 @@ Default **_administrative_ accounts** were enabled.
 
 ### Description
 During the **pentest**, a lot of weak passwords were found.
+To view the passwords we found use below command.
+`cat /etc/shadow`
 
 ### Proposed Solution
 Use 2FA ~~everywhere~~.
