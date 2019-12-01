@@ -120,6 +120,12 @@
 				return {'img' : img, 'description' : img_desc};
 			}
 
+			function markdown_codeblock(text) {
+				let block = document.createElement('pre');
+				block.innerHTML = text[0].substr(3, text[0].length-6);
+				return block
+			}
+
 			function toc(toc_str, paragraph) {
 				let toc_html_obj = document.createElement('div');
 				toc_html_obj.id = 'table_of_contents';
@@ -136,17 +142,8 @@
 			}
 
 			function bold(bold_str) {
-				console.log('Got bold str:', bold_str)
 				let bold_obj = document.createElement('b');
 				bold_obj.innerHTML = bold_str[0].substr(2, bold_str[0].length-4);
-
-				console.log('Converted to:', bold_obj.outerHTML)
-				/*
-				paragraph.appendChild(bold);
-				// Restart the text-section, since we're breaking in the bold
-				span = document.createElement('span');
-				paragraph.appendChild(span);
-				*/
 				return bold_obj.outerHTML
 			}
 
@@ -178,7 +175,9 @@
 				let ital_regex = /(\*|\_)(.)+(\*|\_)/g
 				let bold_regex = /[\*]{2}.*?[\*]{2}/g
 				let stri_regex = /\~\~(.)+\~\~/g
-				let code_regex = /\`(.)+\`/g
+			//	let codeblock_regex = /[\`]{3}([\n\r].*)+[\`]{3}/g // `x3 (new-line*)-repeat until `x3
+				let codeblock_regex = /[\`]{3}.*[\`]{3}/g
+				let code_regex = /`[\s\S]*?`(?:(?![\`]{1}))/g // Trying to avoide triggering on ``` which, this sort of don't.
 
 
 				// Combined emphasis with **asterisks and _underscores_**.
@@ -229,13 +228,29 @@
 				}
 				// Code, uses backticks, `code block`
 				let code_str = markdown_row.match(code_regex);
-				if (code_str) {
+				if (code_str && code_str[0] !== "```") {
 					let formatted = code(code_str);
 					markdown_row = markdown_row.replace(code_str, formatted);
 				}
 
-				//if(markdown_row.length)
 				span.innerHTML = span.innerHTML + format_content(markdown_row) + '<br>';
+
+				let block_str = span.innerHTML.match(codeblock_regex);
+				if(block_str) {
+					span.innerHTML = span.innerHTML.replace(block_str, ''); // Since we're handling it below in the same code block.
+
+					// images are a bit special,
+					// since they are not a inline-text kind of object,
+					// they should and will break the text paragraph and
+					// needs to be inserted between two paragraphs.
+					let code_data = markdown_codeblock(block_str);
+					paragraph.appendChild(code_data);
+
+					// Restart the text-section, since we're breaking in a picture.
+					span = document.createElement('span');
+					paragraph.appendChild(span);
+				}
+
 			}
 
 			function parse(markdown_raw) {
@@ -355,6 +370,15 @@ Default **_administrative_ accounts** were enabled.
 During the **pentest**, a lot of weak passwords were found.
 To view the passwords we found use below command.
 `cat /etc/shadow`
+
+It's also possible to write larger code blocks:
+
+```
+import antigravity
+
+antigravity.init()
+antigravity.activate(myself)
+```
 
 ### Proposed Solution
 Use 2FA ~~everywhere~~.
