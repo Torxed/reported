@@ -5,7 +5,7 @@ Markdown to PDF document writer thingiemagingie
 
 [Video demo](https://youtu.be/znLXd5h5THI)
 
-[Live demo](https://hvornum.se/reported/index.html)
+[Live demo](https://reported.hvornum.se/)
 
 # Screenshot
 
