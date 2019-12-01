@@ -1,6 +1,7 @@
 :root {
+	/* This is taken from chrome's standard PDF converter's height:
+	*/
 	--page-height: 1056px;
-	--page-height-debug: 600px;
 }
 
 html {
@@ -16,7 +17,18 @@ body {
 	font-family: sans-serif;
 }
 
+code {
+	background-color: #DDDDDD;
+	/* Correct the spacring around the default font:
+	*/
+	padding-top: 5px;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
 .first-page {
+	/* This element creates a "perfect" height on the first page.
+	*/
 	display: flex;
 	flex-direction: column;
 	width: 100%;
